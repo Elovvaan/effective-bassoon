@@ -1,0 +1,274 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum EnrollmentStatus {
+  ACTIVE
+  DROPPED
+  COMPLETED
+}
+
+enum SubmissionStatus {
+  DRAFT
+  SUBMITTED
+  RETURNED
+  GRADED
+}
+
+model District {
+  id          String     @id @default(cuid())
+  name        String
+  slug        String     @unique
+  stateCode   String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  schools     School[]
+  users       User[]
+  classrooms  Classroom[]
+  assignments Assignment[]
+  rubrics     Rubric[]
+  submissions Submission[]
+  auditLogs   AuditLog[]
+
+  @@index([createdAt])
+}
+
+model School {
+  id          String      @id @default(cuid())
+  districtId  String
+  name        String
+  code        String
+  timezone    String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  district    District    @relation(fields: [districtId], references: [id], onDelete: Cascade)
+  users       User[]
+  classrooms  Classroom[]
+  assignments Assignment[]
+  rubrics     Rubric[]
+  submissions Submission[]
+  auditLogs   AuditLog[]
+
+  @@unique([districtId, code])
+  @@index([districtId, createdAt])
+}
+
+model Role {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  users       User[]
+}
+
+model User {
+  id            String       @id @default(cuid())
+  districtId    String
+  schoolId      String?
+  roleId        String
+  email         String
+  firstName     String
+  lastName      String
+  externalId    String?
+  isActive      Boolean      @default(true)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  district      District     @relation(fields: [districtId], references: [id], onDelete: Cascade)
+  school        School?      @relation(fields: [schoolId], references: [id], onDelete: SetNull)
+  role          Role         @relation(fields: [roleId], references: [id])
+  enrollments   Enrollment[]
+  taughtClasses Classroom[]  @relation("ClassroomTeacher")
+  assignments   Assignment[] @relation("AssignmentCreator")
+  submissions   Submission[] @relation("StudentSubmissions")
+  scoresGiven   Score[]      @relation("ScoreEvaluator")
+  auditLogs     AuditLog[]
+
+  @@unique([districtId, email])
+  @@index([schoolId, roleId])
+  @@index([districtId, isActive])
+}
+
+model Enrollment {
+  id          String           @id @default(cuid())
+  districtId  String
+  schoolId    String
+  classroomId String
+  studentId   String
+  status      EnrollmentStatus @default(ACTIVE)
+  enrolledAt  DateTime         @default(now())
+  exitedAt    DateTime?
+  classroom   Classroom        @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  student     User             @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([classroomId, studentId])
+  @@index([districtId, schoolId, status])
+  @@index([studentId, status])
+}
+
+model Classroom {
+  id               String       @id @default(cuid())
+  districtId       String
+  schoolId         String
+  teacherId        String
+  name             String
+  courseCode       String
+  academicYear     String
+  term             String?
+  period           String?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  district         District     @relation(fields: [districtId], references: [id], onDelete: Cascade)
+  school           School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  teacher          User         @relation("ClassroomTeacher", fields: [teacherId], references: [id])
+  enrollments      Enrollment[]
+  assignments      Assignment[]
+  submission       Submission[]
+
+  @@unique([schoolId, courseCode, academicYear, term, period])
+  @@index([districtId, schoolId, academicYear])
+  @@index([teacherId, academicYear])
+}
+
+model Assignment {
+  id              String       @id @default(cuid())
+  districtId      String
+  schoolId        String
+  classroomId     String
+  creatorId       String
+  rubricId        String?
+  title           String
+  description     String?
+  dueAt           DateTime?
+  maxPoints       Decimal?     @db.Decimal(5, 2)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  district        District     @relation(fields: [districtId], references: [id], onDelete: Cascade)
+  school          School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  classroom       Classroom    @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  creator         User         @relation("AssignmentCreator", fields: [creatorId], references: [id])
+  rubric          Rubric?      @relation(fields: [rubricId], references: [id], onDelete: SetNull)
+  submissions     Submission[]
+
+  @@index([districtId, schoolId, dueAt])
+  @@index([classroomId, createdAt])
+  @@index([rubricId])
+}
+
+model Rubric {
+  id           String            @id @default(cuid())
+  districtId   String
+  schoolId     String?
+  name         String
+  description  String?
+  version      Int               @default(1)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  district     District          @relation(fields: [districtId], references: [id], onDelete: Cascade)
+  school       School?           @relation(fields: [schoolId], references: [id], onDelete: SetNull)
+  criteria     RubricCriterion[]
+  assignments  Assignment[]
+
+  @@unique([districtId, name, version])
+  @@index([districtId, schoolId, createdAt])
+}
+
+model RubricCriterion {
+  id            String    @id @default(cuid())
+  rubricId      String
+  title         String
+  description   String?
+  weight        Decimal   @default(1) @db.Decimal(4, 2)
+  maxScore      Decimal   @db.Decimal(5, 2)
+  displayOrder  Int
+  createdAt     DateTime  @default(now())
+  rubric        Rubric    @relation(fields: [rubricId], references: [id], onDelete: Cascade)
+  scores        Score[]
+
+  @@unique([rubricId, displayOrder])
+  @@index([rubricId, createdAt])
+}
+
+model Submission {
+  id               String              @id @default(cuid())
+  districtId       String
+  schoolId         String
+  classroomId      String
+  assignmentId     String
+  studentId        String
+  status           SubmissionStatus    @default(DRAFT)
+  submittedAt      DateTime?
+  gradedAt         DateTime?
+  currentVersionId String?             @unique
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  district         District            @relation(fields: [districtId], references: [id], onDelete: Cascade)
+  school           School              @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  classroom        Classroom           @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  assignment       Assignment          @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  student          User                @relation("StudentSubmissions", fields: [studentId], references: [id], onDelete: Cascade)
+  versions         SubmissionVersion[]
+  currentVersion   SubmissionVersion?  @relation("CurrentSubmissionVersion", fields: [currentVersionId], references: [id], onDelete: SetNull)
+
+  @@unique([assignmentId, studentId])
+  @@index([districtId, schoolId, status, submittedAt])
+  @@index([assignmentId, status])
+}
+
+model SubmissionVersion {
+  id             String     @id @default(cuid())
+  submissionId   String
+  versionNumber  Int
+  body           String?
+  attachmentUrl  String?
+  submittedAt    DateTime?
+  createdAt      DateTime   @default(now())
+  submission     Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  currentFor     Submission? @relation("CurrentSubmissionVersion")
+  scores         Score[]
+
+  @@unique([submissionId, versionNumber])
+  @@index([submissionId, createdAt])
+}
+
+model Score {
+  id                  String            @id @default(cuid())
+  districtId          String
+  schoolId            String
+  submissionVersionId String
+  criterionId         String
+  evaluatorId         String
+  pointsAwarded       Decimal           @db.Decimal(5, 2)
+  feedback            String?
+  createdAt           DateTime          @default(now())
+  submissionVersion   SubmissionVersion @relation(fields: [submissionVersionId], references: [id], onDelete: Cascade)
+  criterion           RubricCriterion   @relation(fields: [criterionId], references: [id], onDelete: Cascade)
+  evaluator           User              @relation("ScoreEvaluator", fields: [evaluatorId], references: [id])
+
+  @@unique([submissionVersionId, criterionId])
+  @@index([districtId, schoolId, createdAt])
+  @@index([evaluatorId, createdAt])
+}
+
+model AuditLog {
+  id           String   @id @default(cuid())
+  districtId   String
+  schoolId     String?
+  actorUserId  String?
+  entityType   String
+  entityId     String
+  action       String
+  metadata     Json?
+  createdAt    DateTime @default(now())
+  district     District @relation(fields: [districtId], references: [id], onDelete: Cascade)
+  school       School?  @relation(fields: [schoolId], references: [id], onDelete: SetNull)
+  actor        User?    @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([districtId, schoolId, createdAt])
+  @@index([entityType, entityId, createdAt])
+  @@index([actorUserId, createdAt])
+}
