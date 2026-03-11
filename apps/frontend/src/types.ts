@@ -1,15 +1,8 @@
-export type UserRole = 'district_admin' | 'school_admin' | 'teacher' | 'student'
+import type { UserRole, UserSession } from '@packages/types'
 
-export interface Session {
-  token: string
-  user: {
-    id: string
-    name: string
-    role: UserRole
-    schoolId?: string
-    districtId?: string
-  }
-}
+export type { UserRole }
+
+export type Session = UserSession
 
 export interface NavItem {
   label: string

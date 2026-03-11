@@ -11,5 +11,8 @@
     "lint": "tsc -p tsconfig.json --noEmit",
     "format": "echo 'No formatter configured for @apps/frontend'",
     "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@packages/types": "0.1.0"
   }
 }
