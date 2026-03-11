@@ -1,51 +1,54 @@
 import type { AnalyticsSummary } from '@packages/types'
+import { Card, DataTable, EmptyState } from '@packages/ui'
 
 import { useAnalytics } from '../api/hooks'
-import { useAuth } from '../auth/AuthContext'
-
-const scopeData: AnalyticsSummary[] = [
-  { scope: 'class', activeUsers: 29, completionRate: 81, averageScore: 84 },
-  { scope: 'school', activeUsers: 611, completionRate: 76, averageScore: 79 },
-  { scope: 'district', activeUsers: 1830, completionRate: 74, averageScore: 78 },
-]
+import { useApi } from '../hooks/useApi'
+import { apiClient } from '../api/client'
+import { useAuth } from '../hooks/useAuth'
+import { useRoleGuard } from '../hooks/useRoleGuard'
 
 export function AnalyticsPage() {
   const { session } = useAuth()
-  const { data, isLoading, error } = useAnalytics(session)
+  const { canAccess } = useRoleGuard(['district_admin', 'school_admin', 'teacher'])
+  const summaryApi = useAnalytics(session)
+  const classesApi = useApi(async () => (session ? apiClient.listClasses(session) : { items: [] }), [session])
+  const schoolsApi = useApi(async () => (session ? apiClient.listSchools(session) : { items: [] }), [session])
+
+  if (!canAccess) {
+    return <EmptyState message="Analytics access required." />
+  }
+
+  const scopeRows: AnalyticsSummary[] = [
+    summaryApi.data ?? { scope: 'district', activeUsers: 0, completionRate: 0, averageScore: 0 },
+    { scope: 'school', activeUsers: schoolsApi.data?.items.length ?? 0, completionRate: summaryApi.data?.completionRate ?? 0, averageScore: summaryApi.data?.averageScore ?? 0 },
+    { scope: 'class', activeUsers: classesApi.data?.items.length ?? 0, completionRate: summaryApi.data?.completionRate ?? 0, averageScore: summaryApi.data?.averageScore ?? 0 },
+  ]
 
   return (
     <section>
       <h1>Analytics</h1>
-      {isLoading ? <p>Loading analytics...</p> : null}
-      {error ? <p className="error">{error}</p> : null}
-      {data ? (
-        <ul>
-          <li>Active users: {data.activeUsers}</li>
-          <li>Completion rate: {data.completionRate}%</li>
-        </ul>
-      ) : null}
+      {summaryApi.isLoading ? <p>Loading analytics...</p> : null}
+      {summaryApi.error ? <p className="error">{summaryApi.error}</p> : null}
 
-      <h2>Scope Comparison</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Scope</th>
-            <th>Active Users</th>
-            <th>Completion</th>
-            <th>Average Score</th>
-          </tr>
-        </thead>
-        <tbody>
-          {scopeData.map((item) => (
-            <tr key={item.scope}>
-              <td>{item.scope}</td>
-              <td>{item.activeUsers}</td>
-              <td>{item.completionRate}%</td>
-              <td>{item.averageScore}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <Card title="District-Level Metrics">
+        <ul>
+          <li>Active users: {summaryApi.data?.activeUsers ?? 0}</li>
+          <li>Completion rate: {summaryApi.data?.completionRate ?? 0}%</li>
+          <li>Average score: {summaryApi.data?.averageScore ?? 0}</li>
+        </ul>
+      </Card>
+
+      <Card title="Scope Metrics Table">
+        <DataTable<AnalyticsSummary>
+          columns={[
+            { key: 'scope', label: 'Scope' },
+            { key: 'activeUsers', label: 'Active Users' },
+            { key: 'completionRate', label: 'Completion %' },
+            { key: 'averageScore', label: 'Average Score' },
+          ]}
+          rows={scopeRows}
+        />
+      </Card>
     </section>
   )
 }

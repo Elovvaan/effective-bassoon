@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { RoleNavigation } from '../components/RoleNavigation'
-import { useAuth } from '../auth/AuthContext'
+import { useAuth } from '../hooks/useAuth'
 
 export function RoleLayoutShell({ title, children }: { title: string; children: ReactNode }) {
   const { session, logout } = useAuth()

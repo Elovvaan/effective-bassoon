@@ -1,14 +1,15 @@
 import { createContext, useCallback, useContext, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
+
 import { useLogin } from '../api/hooks'
-import type { Session, UserRole } from '../types'
+import type { Session } from '../types'
 
 interface AuthContextValue {
   session: Session | null
   isAuthenticated: boolean
   isLoading: boolean
   error: string | null
-  login: (username: string, password: string, role: UserRole) => Promise<void>
+  login: (email: string, password: string) => Promise<void>
   logout: () => void
 }
 
@@ -18,8 +19,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const { login: loginRequest, isLoading, error } = useLogin()
 
-  const login = useCallback(async (username: string, password: string, role: UserRole) => {
-    const nextSession = await loginRequest({ username, password, role })
+  const login = useCallback(async (email: string, password: string) => {
+    const nextSession = await loginRequest({ email, password })
     setSession(nextSession)
   }, [loginRequest])
 
