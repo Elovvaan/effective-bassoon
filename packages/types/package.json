@@ -1,0 +1,15 @@
+{
+  "name": "@packages/types",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "node --test",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "format": "echo 'No formatter configured for @packages/types'",
+    "clean": "rm -rf dist"
+  }
+}
