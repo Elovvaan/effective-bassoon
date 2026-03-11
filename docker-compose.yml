@@ -1,0 +1,38 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: appdb
+      POSTGRES_USER: appuser
+      POSTGRES_PASSWORD: apppass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: .
+      dockerfile: packages/backend/Dockerfile
+    environment:
+      PORT: 3000
+      DATABASE_URL: postgres://appuser:apppass@postgres:5432/appdb
+    depends_on:
+      - postgres
+    ports:
+      - "3000:3000"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: packages/frontend/Dockerfile
+    environment:
+      PORT: 4000
+      API_URL: http://backend:3000
+    depends_on:
+      - backend
+    ports:
+      - "4000:4000"
+
+volumes:
+  postgres-data:
