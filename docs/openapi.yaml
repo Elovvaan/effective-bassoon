@@ -1,0 +1,330 @@
+openapi: 3.0.3
+info:
+  title: Effective Bassoon API
+  version: 0.1.0
+  description: |
+    Manually maintained OpenAPI contract derived from backend module responsibilities.
+servers:
+  - url: https://api.example.com
+    description: Production
+  - url: http://localhost:3000
+    description: Local
+security:
+  - bearerAuth: []
+tags:
+  - name: Auth
+  - name: SIS
+  - name: Assessments
+  - name: Analytics
+  - name: Audit
+paths:
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Authenticate user and issue tokens
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+      responses:
+        '200':
+          description: Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Refresh access token
+      responses:
+        '200':
+          description: Token refreshed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+  /sis/students:
+    get:
+      tags: [SIS]
+      summary: List students
+      parameters:
+        - in: query
+          name: schoolId
+          schema:
+            type: string
+        - in: query
+          name: gradeLevel
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Student list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Student'
+    post:
+      tags: [SIS]
+      summary: Create student
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateStudentInput'
+      responses:
+        '201':
+          description: Student created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Student'
+  /sis/enrollments:
+    post:
+      tags: [SIS]
+      summary: Enroll student in section
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnrollmentInput'
+      responses:
+        '201':
+          description: Enrollment created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Enrollment'
+  /assessments:
+    get:
+      tags: [Assessments]
+      summary: List assessments
+      responses:
+        '200':
+          description: Assessment list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Assessment'
+    post:
+      tags: [Assessments]
+      summary: Create assessment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAssessmentInput'
+      responses:
+        '201':
+          description: Assessment created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Assessment'
+  /assessments/{assessmentId}/attempts:
+    post:
+      tags: [Assessments]
+      summary: Start assessment attempt
+      parameters:
+        - in: path
+          name: assessmentId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [studentId]
+              properties:
+                studentId:
+                  type: string
+      responses:
+        '201':
+          description: Attempt created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attempt'
+  /analytics/student-performance:
+    get:
+      tags: [Analytics]
+      summary: Retrieve student performance aggregates
+      parameters:
+        - in: query
+          name: studentId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Student analytics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudentPerformance'
+  /audit/events:
+    get:
+      tags: [Audit]
+      summary: Query audit trail
+      parameters:
+        - in: query
+          name: actorId
+          schema:
+            type: string
+        - in: query
+          name: entityType
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Audit events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AuditEvent'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    TokenResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        expiresIn:
+          type: integer
+    Student:
+      type: object
+      properties:
+        id:
+          type: string
+        externalId:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        gradeLevel:
+          type: string
+    CreateStudentInput:
+      type: object
+      required: [firstName, lastName]
+      properties:
+        externalId:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        gradeLevel:
+          type: string
+    EnrollmentInput:
+      type: object
+      required: [studentId, sectionId]
+      properties:
+        studentId:
+          type: string
+        sectionId:
+          type: string
+    Enrollment:
+      type: object
+      properties:
+        id:
+          type: string
+        studentId:
+          type: string
+        sectionId:
+          type: string
+        enrolledAt:
+          type: string
+          format: date-time
+    Assessment:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        subject:
+          type: string
+        maxScore:
+          type: number
+    CreateAssessmentInput:
+      type: object
+      required: [title, subject]
+      properties:
+        title:
+          type: string
+        subject:
+          type: string
+        maxScore:
+          type: number
+    Attempt:
+      type: object
+      properties:
+        id:
+          type: string
+        assessmentId:
+          type: string
+        studentId:
+          type: string
+        status:
+          type: string
+          enum: [in_progress, submitted, scored]
+    StudentPerformance:
+      type: object
+      properties:
+        studentId:
+          type: string
+        attempts:
+          type: integer
+        averageScore:
+          type: number
+        proficiencyBand:
+          type: string
+    AuditEvent:
+      type: object
+      properties:
+        id:
+          type: string
+        actorId:
+          type: string
+        action:
+          type: string
+        entityType:
+          type: string
+        entityId:
+          type: string
+        metadata:
+          type: object
+          additionalProperties: true
+        createdAt:
+          type: string
+          format: date-time
