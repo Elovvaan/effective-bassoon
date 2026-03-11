@@ -1,113 +1,116 @@
-# Effective Bassoon Backend Documentation
+# Effective Bassoon Monorepo
 
-This repository currently focuses on baseline project documentation for a modular education platform backend. It includes an OpenAPI contract, module-level docs, and a relational data model guide.
+Effective Bassoon is a TypeScript monorepo for a district-focused education platform. It includes an Express backend API, a React frontend with role-based experiences, and shared packages for domain types and reusable utilities.
 
-## Architecture Map
+## Monorepo Layout
 
-The backend is organized as domain modules behind a single API surface:
+- `apps/backend` — Express API with modular domain routers and middleware.
+- `apps/frontend` — React application with role-protected layouts.
+- `packages/types` — Shared domain and API TypeScript interfaces.
+- `packages/ui` — Shared UI primitives and rendering helpers.
+- `packages/utils` — Shared utility helpers.
+- `docs/` — OpenAPI spec, module documentation, and data model notes.
 
-- **Auth Module**: user identity, login, token/session lifecycle, role mapping.
-- **SIS Module**: student information system entities such as schools, sections, enrollments.
-- **Assessments Module**: question banks, assessments, attempts, scoring events.
-- **Analytics Module**: aggregate metrics and trend views from events/attempts.
-- **Audit Logging Module**: immutable activity trail for sensitive operations.
+## Backend Architecture
 
-### Suggested Layering
+The backend exposes a health endpoint and domain routers under an API prefix.
 
-1. **API Layer**
-   - REST endpoints (see `docs/openapi.yaml`).
-2. **Application Layer**
-   - Use-case services per module.
-3. **Domain Layer**
-   - Validation, policies, and domain rules.
-4. **Infrastructure Layer**
-   - Persistence, caching, queues, and external integrations.
+- `GET /health`
+- `/api/auth`
+- `/api/users`
+- `/api/schools`
+- `/api/classes`
+- `/api/assignments`
+- `/api/submissions`
+- `/api/rubrics`
+- `/api/analytics`
+- `/api/audit`
 
-### Cross-Cutting Concerns
+Domain modules are organized by layered responsibilities:
 
-- Authentication + authorization
-- Request validation
-- Idempotency for write-heavy endpoints
-- Observability (logs, metrics, traces)
-- Audit events for privileged changes
+1. **Routes/Controllers** — HTTP request/response handling.
+2. **Services** — Business logic.
+3. **Repositories** — Data access abstraction.
+4. **Validation and Errors** — Typed validation + centralized error middleware.
 
-## Setup Steps
+## Frontend Architecture
 
-> Adjust commands as needed for your runtime (Node, Python, Java, etc.).
+The React app uses protected routes mapped to district roles:
 
-1. Clone the repo.
-2. Copy environment variables:
+- **District admin:** `/admin`, `/analytics`
+- **School admin:** `/admin`, `/analytics`
+- **Teacher:** `/teacher`, `/analytics`
+- **Student:** `/student`
 
-   ```bash
-   cp .env.example .env
-   ```
+Authentication state is managed by `AuthContext`. Route-level guards enforce role access.
 
-3. Install dependencies:
+## Data Model Summary
 
-   ```bash
-   # Example (Node)
-   npm install
-   ```
+Prisma models support district-scale multitenancy and instructional workflows:
 
-4. Run migrations/seeding:
+- Organization: `District`, `School`
+- Identity/Access: `User`, `Role`
+- SIS and rostering: `Classroom`, `Enrollment`
+- Instruction: `Assignment`, `Rubric`, `Submission`
+- Compliance: audit/scoring related entities
 
-   ```bash
-   npm run db:migrate
-   npm run db:seed
-   ```
+The schema includes relational constraints and indexes to support district/school scoping and analytics-friendly querying.
 
-5. Start API server:
+## Local Development
 
-   ```bash
-   npm run dev
-   ```
+### 1) Install dependencies
 
-6. Optional: start background workers:
+```bash
+npm install
+```
 
-   ```bash
-   npm run worker
-   ```
+### 2) Configure environment variables
 
-## Scripts
+```bash
+cp apps/backend/.env.example apps/backend/.env
+cp apps/frontend/.env.example apps/frontend/.env
+```
 
-A recommended script surface for consistency:
+### 3) Database setup (backend)
 
-- `npm run dev` — start API in watch mode.
-- `npm run start` — run API in production mode.
-- `npm run test` — execute unit/integration tests.
-- `npm run lint` — static linting.
-- `npm run typecheck` — type validation.
-- `npm run db:migrate` — apply schema migrations.
-- `npm run db:seed` — load baseline reference data.
-- `npm run worker` — run async job worker.
+```bash
+npm --workspace @apps/backend run prisma:migrate
+npm --workspace @apps/backend run prisma:seed
+```
 
-## Environment Variables
+> If your workspace scripts do not define these names yet, run Prisma commands directly from `apps/backend`.
 
-Use `.env` for local development and secure secret stores in production.
+### 4) Start backend and frontend
 
-| Variable | Required | Description |
+```bash
+npm --workspace @apps/backend run dev
+npm --workspace @apps/frontend run dev
+```
+
+## Roles and Route Mapping
+
+| Role | Frontend Routes | Backend Responsibility |
 |---|---|---|
-| `NODE_ENV` | yes | Runtime environment (`development`, `test`, `production`). |
-| `PORT` | yes | API HTTP port. |
-| `DATABASE_URL` | yes | Primary relational database connection string. |
-| `REDIS_URL` | recommended | Cache/queue broker URL. |
-| `JWT_ISSUER` | yes | Token issuer claim. |
-| `JWT_AUDIENCE` | yes | Token audience claim. |
-| `JWT_PRIVATE_KEY` | yes | Private key for access token signing. |
-| `JWT_PUBLIC_KEY` | yes | Public key for token verification. |
-| `SIS_PROVIDER` | optional | SIS integration provider identifier. |
-| `ANALYTICS_WRITE_ENABLED` | optional | Toggle analytics event writes. |
-| `AUDIT_LOG_RETENTION_DAYS` | optional | Data retention policy for audit records. |
-| `LOG_LEVEL` | recommended | Logging verbosity (`debug`, `info`, etc.). |
-| `CORS_ALLOWED_ORIGINS` | recommended | Comma-separated allowed origins. |
+| District Admin | `/admin`, `/analytics` | District-wide configuration, reporting, governance |
+| School Admin | `/admin`, `/analytics` | School operations, user and class administration |
+| Teacher | `/teacher`, `/analytics` | Class management, assignment and submission review |
+| Student | `/student` | Assignment completion, feedback and progress |
+
+## Testing and Quality Checks
+
+```bash
+npm test
+npm run lint
+npm run build
+```
 
 ## Documentation Index
 
-- API contract: `docs/openapi.yaml`
+- OpenAPI: `docs/openapi.yaml`
+- Data model: `docs/data-model.md`
 - Module docs:
   - `docs/modules/auth.md`
   - `docs/modules/sis.md`
   - `docs/modules/assessments.md`
   - `docs/modules/analytics.md`
   - `docs/modules/audit-logging.md`
-- Data model: `docs/data-model.md`
