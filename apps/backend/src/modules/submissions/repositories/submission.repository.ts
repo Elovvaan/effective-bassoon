@@ -1,16 +1,2 @@
-import type { Submission } from '../submission.types.js';
-
-export class SubmissionRepository {
-  private readonly store = new Map<string, Submission>();
-
-  create(data: Omit<Submission, 'id'>): Submission {
-    const id = crypto.randomUUID();
-    const item: Submission = { id, ...data };
-    this.store.set(id, item);
-    return item;
-  }
-
-  findAll(): Submission[] {
-    return Array.from(this.store.values());
-  }
-}
+import type { ApiSubmission } from '@packages/types'; import { store } from '../../_store.js';
+export class SubmissionRepository { create(v:ApiSubmission){store.submissions.set(v.id,v);return v;} findAll(){return Array.from(store.submissions.values());} findById(id:string){return store.submissions.get(id)??null;} update(id:string,p:Partial<ApiSubmission>){const f=this.findById(id);if(!f)return null;const n={...f,...p};store.submissions.set(id,n);return n;} delete(id:string){return store.submissions.delete(id);} }

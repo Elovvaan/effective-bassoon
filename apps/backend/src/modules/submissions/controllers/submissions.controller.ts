@@ -1,19 +1,7 @@
-import { Router } from 'express';
-
-import { validateRequest } from '../../../common/validation/validate-request.js';
-import { createSubmissionSchema } from '../dto/create-submission.dto.js';
-import { SubmissionRepository } from '../repositories/submission.repository.js';
-import { SubmissionService } from '../services/submission.service.js';
-
-const repository = new SubmissionRepository();
-const service = new SubmissionService(repository);
-
-export const submissionsRouter = Router();
-
-submissionsRouter.get('/', (_req, res) => {
-  res.json(service.list());
-});
-
-submissionsRouter.post('/', validateRequest(createSubmissionSchema), (req, res) => {
-  res.status(201).json(service.create(req.body));
-});
+import { Router } from 'express'; import { asyncHandler } from '../../../common/http/async-handler.js'; import { getRequestContext, requireRoles } from '../../../common/auth/request-context.js'; import { validateRequest } from '../../../common/validation/validate-request.js'; import { createSubmissionSchema, listSubmissionsSchema, updateSubmissionSchema } from '../dto/create-submission.dto.js'; import { SubmissionRepository } from '../repositories/submission.repository.js'; import { SubmissionService } from '../services/submission.service.js';
+const service=new SubmissionService(new SubmissionRepository()); export const submissionsRouter=Router();
+submissionsRouter.get('/', asyncHandler(async (req,res)=>res.json(service.list(getRequestContext(req),listSubmissionsSchema.parse(req.query)))));
+submissionsRouter.get('/:id', asyncHandler(async (req,res)=>res.json(service.getById(getRequestContext(req),req.params.id))));
+submissionsRouter.post('/', requireRoles(['district_admin','school_admin','teacher','student']), validateRequest(createSubmissionSchema), asyncHandler(async (req,res)=>res.status(201).json(service.create(getRequestContext(req),req.body))));
+submissionsRouter.patch('/:id', requireRoles(['district_admin','school_admin','teacher','student']), validateRequest(updateSubmissionSchema), asyncHandler(async (req,res)=>res.json(service.update(getRequestContext(req),req.params.id,req.body))));
+submissionsRouter.delete('/:id', requireRoles(['district_admin','school_admin','teacher']), asyncHandler(async (req,res)=>{service.remove(getRequestContext(req),req.params.id);res.status(204).send();}));

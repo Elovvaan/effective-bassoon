@@ -1,16 +1,2 @@
-import type { Rubric } from '../rubric.types.js';
-
-export class RubricRepository {
-  private readonly store = new Map<string, Rubric>();
-
-  create(data: Omit<Rubric, 'id'>): Rubric {
-    const id = crypto.randomUUID();
-    const item: Rubric = { id, ...data };
-    this.store.set(id, item);
-    return item;
-  }
-
-  findAll(): Rubric[] {
-    return Array.from(this.store.values());
-  }
-}
+import type { ApiRubric } from '@packages/types'; import { store } from '../../_store.js';
+export class RubricRepository { create(v:ApiRubric){store.rubrics.set(v.id,v);return v;} findAll(){return Array.from(store.rubrics.values());} findById(id:string){return store.rubrics.get(id)??null;} update(id:string,p:Partial<ApiRubric>){const f=this.findById(id);if(!f)return null;const n={...f,...p};store.rubrics.set(id,n);return n;} delete(id:string){return store.rubrics.delete(id);} }

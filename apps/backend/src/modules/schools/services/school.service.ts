@@ -1,14 +1,2 @@
-import type { CreateSchoolDto } from '../dto/create-school.dto.js';
-import { SchoolRepository } from '../repositories/school.repository.js';
-
-export class SchoolService {
-  constructor(private readonly repository: SchoolRepository) {}
-
-  create(dto: CreateSchoolDto) {
-    return this.repository.create(dto);
-  }
-
-  list() {
-    return this.repository.findAll();
-  }
-}
+import type { ApiSchool } from '@packages/types'; import { NotFoundError } from '../../../common/errors/app-error.js'; import type { RequestContext } from '../../../common/auth/request-context.js'; import { applyPagination, makeId } from '../../_store.js'; import type { CreateSchoolDto, UpdateSchoolDto } from '../dto/create-school.dto.js'; import { SchoolRepository } from '../repositories/school.repository.js';
+export class SchoolService { constructor(private readonly repo: SchoolRepository) {} list(ctx:RequestContext,q:{page?:number;pageSize?:number;search?:string}){const items=this.repo.findAll().filter(s=>s.districtId===ctx.districtId).filter(s=>!q.search||s.name.toLowerCase().includes(q.search.toLowerCase()));return applyPagination(items,q);} create(ctx:RequestContext,dto:CreateSchoolDto){return this.repo.create({id:makeId(),districtId:ctx.districtId,...dto});} getById(ctx:RequestContext,id:string){const s=this.repo.findById(id); if(!s||s.districtId!==ctx.districtId) throw new NotFoundError('School'); return s;} update(ctx:RequestContext,id:string,dto:UpdateSchoolDto){this.getById(ctx,id); return this.repo.update(id,dto as Partial<ApiSchool>);} remove(ctx:RequestContext,id:string){this.getById(ctx,id); this.repo.delete(id);} }

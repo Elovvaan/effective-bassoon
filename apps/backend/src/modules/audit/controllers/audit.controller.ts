@@ -1,15 +1,4 @@
-import { Router } from 'express';
-
-import { queryAuditSchema } from '../dto/query-audit.dto.js';
-import { AuditRepository } from '../repositories/audit.repository.js';
-import { AuditService } from '../services/audit.service.js';
-
-const repository = new AuditRepository();
-const service = new AuditService(repository);
-
-export const auditRouter = Router();
-
-auditRouter.get('/events', (req, res) => {
-  const dto = queryAuditSchema.parse(req.query);
-  res.json(service.list(dto));
-});
+import { Router } from 'express'; import { asyncHandler } from '../../../common/http/async-handler.js'; import { getRequestContext, requireRoles } from '../../../common/auth/request-context.js'; import { queryAuditSchema } from '../dto/query-audit.dto.js'; import { AuditRepository } from '../repositories/audit.repository.js'; import { AuditService } from '../services/audit.service.js';
+const service=new AuditService(new AuditRepository()); export const auditRouter=Router();
+auditRouter.get('/', requireRoles(['district_admin','school_admin']), asyncHandler(async (req,res)=>res.json(service.list(getRequestContext(req),queryAuditSchema.parse(req.query)))));
+auditRouter.post('/', requireRoles(['district_admin','school_admin','teacher']), asyncHandler(async (req,res)=>res.status(201).json(service.record(getRequestContext(req),req.body))));

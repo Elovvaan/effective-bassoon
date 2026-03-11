@@ -1,14 +1,2 @@
-import type { CreateClassroomDto } from '../dto/create-classroom.dto.js';
-import { ClassroomRepository } from '../repositories/classroom.repository.js';
-
-export class ClassroomService {
-  constructor(private readonly repository: ClassroomRepository) {}
-
-  create(dto: CreateClassroomDto) {
-    return this.repository.create(dto);
-  }
-
-  list() {
-    return this.repository.findAll();
-  }
-}
+import type { ApiClassroom } from '@packages/types'; import { NotFoundError } from '../../../common/errors/app-error.js'; import type { RequestContext } from '../../../common/auth/request-context.js'; import { applyPagination, makeId } from '../../_store.js'; import type { CreateClassroomDto, UpdateClassroomDto } from '../dto/create-classroom.dto.js'; import { ClassroomRepository } from '../repositories/classroom.repository.js';
+export class ClassroomService { constructor(private readonly repo:ClassroomRepository){} list(ctx:RequestContext,q:{page?:number;pageSize?:number;schoolId?:string;teacherId?:string}){const items=this.repo.findAll().filter(c=>c.districtId===ctx.districtId).filter(c=>!ctx.schoolId||c.schoolId===ctx.schoolId).filter(c=>!q.schoolId||c.schoolId===q.schoolId).filter(c=>!q.teacherId||c.teacherId===q.teacherId); return applyPagination(items,q);} create(ctx:RequestContext,dto:CreateClassroomDto){return this.repo.create({id:makeId(),districtId:ctx.districtId,...dto});} getById(ctx:RequestContext,id:string){const c=this.repo.findById(id);if(!c||c.districtId!==ctx.districtId|| (ctx.schoolId&&c.schoolId!==ctx.schoolId)) throw new NotFoundError('Classroom'); return c;} update(ctx:RequestContext,id:string,dto:UpdateClassroomDto){this.getById(ctx,id); return this.repo.update(id,dto as Partial<ApiClassroom>);} remove(ctx:RequestContext,id:string){this.getById(ctx,id); this.repo.delete(id);} }

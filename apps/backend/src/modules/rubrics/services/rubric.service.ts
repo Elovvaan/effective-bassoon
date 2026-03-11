@@ -1,14 +1,2 @@
-import type { CreateRubricDto } from '../dto/create-rubric.dto.js';
-import { RubricRepository } from '../repositories/rubric.repository.js';
-
-export class RubricService {
-  constructor(private readonly repository: RubricRepository) {}
-
-  create(dto: CreateRubricDto) {
-    return this.repository.create(dto);
-  }
-
-  list() {
-    return this.repository.findAll();
-  }
-}
+import type { ApiRubric } from '@packages/types'; import { NotFoundError } from '../../../common/errors/app-error.js'; import type { RequestContext } from '../../../common/auth/request-context.js'; import { applyPagination, makeId } from '../../_store.js'; import type { CreateRubricDto, UpdateRubricDto } from '../dto/create-rubric.dto.js'; import { RubricRepository } from '../repositories/rubric.repository.js';
+export class RubricService { constructor(private readonly repo:RubricRepository){} list(ctx:RequestContext,q:{page?:number;pageSize?:number;schoolId?:string;name?:string}){const items=this.repo.findAll().filter(r=>r.districtId===ctx.districtId).filter(r=>!ctx.schoolId||!r.schoolId||r.schoolId===ctx.schoolId).filter(r=>!q.schoolId||r.schoolId===q.schoolId).filter(r=>!q.name||r.name.toLowerCase().includes(q.name.toLowerCase())); return applyPagination(items,q);} create(ctx:RequestContext,dto:CreateRubricDto){return this.repo.create({id:makeId(),districtId:ctx.districtId,version:dto.version??1,...dto});} getById(ctx:RequestContext,id:string){const r=this.repo.findById(id);if(!r||r.districtId!==ctx.districtId|| (ctx.schoolId && r.schoolId && r.schoolId!==ctx.schoolId)) throw new NotFoundError('Rubric'); return r;} update(ctx:RequestContext,id:string,dto:UpdateRubricDto){this.getById(ctx,id); return this.repo.update(id,dto as Partial<ApiRubric>);} remove(ctx:RequestContext,id:string){this.getById(ctx,id); this.repo.delete(id);} }

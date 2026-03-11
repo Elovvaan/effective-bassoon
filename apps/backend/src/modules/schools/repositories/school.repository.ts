@@ -1,16 +1,2 @@
-import type { School } from '../school.types.js';
-
-export class SchoolRepository {
-  private readonly store = new Map<string, School>();
-
-  create(data: Omit<School, 'id'>): School {
-    const id = crypto.randomUUID();
-    const item: School = { id, ...data };
-    this.store.set(id, item);
-    return item;
-  }
-
-  findAll(): School[] {
-    return Array.from(this.store.values());
-  }
-}
+import type { ApiSchool } from '@packages/types'; import { store } from '../../_store.js';
+export class SchoolRepository { create(v: ApiSchool){store.schools.set(v.id,v);return v;} findAll(){return Array.from(store.schools.values());} findById(id:string){return store.schools.get(id)??null;} update(id:string,p:Partial<ApiSchool>){const f=this.findById(id);if(!f)return null;const n={...f,...p};store.schools.set(id,n);return n;} delete(id:string){return store.schools.delete(id);} }

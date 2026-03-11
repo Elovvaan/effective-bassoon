@@ -1,16 +1,2 @@
-import type { Assignment } from '../assignment.types.js';
-
-export class AssignmentRepository {
-  private readonly store = new Map<string, Assignment>();
-
-  create(data: Omit<Assignment, 'id'>): Assignment {
-    const id = crypto.randomUUID();
-    const item: Assignment = { id, ...data };
-    this.store.set(id, item);
-    return item;
-  }
-
-  findAll(): Assignment[] {
-    return Array.from(this.store.values());
-  }
-}
+import type { ApiAssignment } from '@packages/types'; import { store } from '../../_store.js';
+export class AssignmentRepository { create(v:ApiAssignment){store.assignments.set(v.id,v);return v;} findAll(){return Array.from(store.assignments.values());} findById(id:string){return store.assignments.get(id)??null;} update(id:string,p:Partial<ApiAssignment>){const f=this.findById(id);if(!f)return null;const n={...f,...p};store.assignments.set(id,n);return n;} delete(id:string){return store.assignments.delete(id);} }

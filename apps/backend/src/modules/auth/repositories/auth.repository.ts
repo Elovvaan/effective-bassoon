@@ -1,5 +1,4 @@
+import { store } from '../../_store.js';
 export class AuthRepository {
-  validateCredentials(email: string, password: string): boolean {
-    return email.length > 0 && password.length > 0;
-  }
+  findUserByEmail(email: string) { return Array.from(store.users.values()).find((u) => u.email === email) ?? null; }
 }

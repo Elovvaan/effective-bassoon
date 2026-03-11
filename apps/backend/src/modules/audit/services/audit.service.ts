@@ -1,10 +1,2 @@
-import type { QueryAuditDto } from '../dto/query-audit.dto.js';
-import { AuditRepository } from '../repositories/audit.repository.js';
-
-export class AuditService {
-  constructor(private readonly repository: AuditRepository) {}
-
-  list(dto: QueryAuditDto) {
-    return this.repository.list(dto.limit);
-  }
-}
+import type { RequestContext } from '../../../common/auth/request-context.js'; import { applyPagination, makeId } from '../../_store.js'; import { AuditRepository } from '../repositories/audit.repository.js';
+export class AuditService { constructor(private readonly repo:AuditRepository){} list(ctx:RequestContext,q:{page?:number;pageSize?:number;entityType?:string;entityId?:string;actorUserId?:string;action?:string}){const rows=this.repo.findAll().filter(a=>a.districtId===ctx.districtId).filter(a=>!ctx.schoolId||a.schoolId===ctx.schoolId).filter(a=>!q.entityType||a.entityType===q.entityType).filter(a=>!q.entityId||a.entityId===q.entityId).filter(a=>!q.actorUserId||a.actorUserId===q.actorUserId).filter(a=>!q.action||a.action===q.action); return applyPagination(rows,q);} record(ctx:RequestContext,event:{schoolId?:string;entityType:string;entityId:string;action:string;metadata?:Record<string,unknown>}){return this.repo.create({id:makeId(),districtId:ctx.districtId,schoolId:event.schoolId??ctx.schoolId,actorUserId:ctx.userId,entityType:event.entityType,entityId:event.entityId,action:event.action,metadata:event.metadata,createdAt:new Date().toISOString()});} }
