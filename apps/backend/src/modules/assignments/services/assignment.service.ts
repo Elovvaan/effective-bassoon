@@ -1,14 +1,2 @@
-import type { CreateAssignmentDto } from '../dto/create-assignment.dto.js';
-import { AssignmentRepository } from '../repositories/assignment.repository.js';
-
-export class AssignmentService {
-  constructor(private readonly repository: AssignmentRepository) {}
-
-  create(dto: CreateAssignmentDto) {
-    return this.repository.create(dto);
-  }
-
-  list() {
-    return this.repository.findAll();
-  }
-}
+import type { ApiAssignment } from '@packages/types'; import { NotFoundError } from '../../../common/errors/app-error.js'; import type { RequestContext } from '../../../common/auth/request-context.js'; import { applyPagination, makeId } from '../../_store.js'; import type { CreateAssignmentDto, UpdateAssignmentDto } from '../dto/create-assignment.dto.js'; import { AssignmentRepository } from '../repositories/assignment.repository.js';
+export class AssignmentService { constructor(private readonly repo:AssignmentRepository){} list(ctx:RequestContext,q:{page?:number;pageSize?:number;classroomId?:string}){const items=this.repo.findAll().filter(a=>a.districtId===ctx.districtId).filter(a=>!ctx.schoolId||a.schoolId===ctx.schoolId).filter(a=>!q.classroomId||a.classroomId===q.classroomId);return applyPagination(items,q);} create(ctx:RequestContext,dto:CreateAssignmentDto){return this.repo.create({id:makeId(),districtId:ctx.districtId,creatorId:ctx.userId,...dto});} getById(ctx:RequestContext,id:string){const a=this.repo.findById(id);if(!a||a.districtId!==ctx.districtId||(ctx.schoolId&&a.schoolId!==ctx.schoolId)) throw new NotFoundError('Assignment'); return a;} update(ctx:RequestContext,id:string,dto:UpdateAssignmentDto){this.getById(ctx,id); return this.repo.update(id,dto as Partial<ApiAssignment>);} remove(ctx:RequestContext,id:string){this.getById(ctx,id); this.repo.delete(id);} }

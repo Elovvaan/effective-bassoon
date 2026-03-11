@@ -1,14 +1,2 @@
-import type { CreateSubmissionDto } from '../dto/create-submission.dto.js';
-import { SubmissionRepository } from '../repositories/submission.repository.js';
-
-export class SubmissionService {
-  constructor(private readonly repository: SubmissionRepository) {}
-
-  create(dto: CreateSubmissionDto) {
-    return this.repository.create(dto);
-  }
-
-  list() {
-    return this.repository.findAll();
-  }
-}
+import type { ApiSubmission } from '@packages/types'; import { NotFoundError } from '../../../common/errors/app-error.js'; import type { RequestContext } from '../../../common/auth/request-context.js'; import { applyPagination, makeId } from '../../_store.js'; import type { CreateSubmissionDto, UpdateSubmissionDto } from '../dto/create-submission.dto.js'; import { SubmissionRepository } from '../repositories/submission.repository.js';
+export class SubmissionService { constructor(private readonly repo:SubmissionRepository){} list(ctx:RequestContext,q:{page?:number;pageSize?:number;assignmentId?:string;studentId?:string;status?:ApiSubmission['status']}){const items=this.repo.findAll().filter(s=>s.districtId===ctx.districtId).filter(s=>!ctx.schoolId||s.schoolId===ctx.schoolId).filter(s=>!q.assignmentId||s.assignmentId===q.assignmentId).filter(s=>!q.studentId||s.studentId===q.studentId).filter(s=>!q.status||s.status===q.status);return applyPagination(items,q);} create(ctx:RequestContext,dto:CreateSubmissionDto){return this.repo.create({id:makeId(),districtId:ctx.districtId,status:dto.status??'DRAFT',...dto});} getById(ctx:RequestContext,id:string){const s=this.repo.findById(id);if(!s||s.districtId!==ctx.districtId||(ctx.schoolId&&s.schoolId!==ctx.schoolId)) throw new NotFoundError('Submission'); return s;} update(ctx:RequestContext,id:string,dto:UpdateSubmissionDto){this.getById(ctx,id); return this.repo.update(id,dto as Partial<ApiSubmission>);} remove(ctx:RequestContext,id:string){this.getById(ctx,id); this.repo.delete(id);} }

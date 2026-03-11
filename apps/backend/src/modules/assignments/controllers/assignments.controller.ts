@@ -1,19 +1,7 @@
-import { Router } from 'express';
-
-import { validateRequest } from '../../../common/validation/validate-request.js';
-import { createAssignmentSchema } from '../dto/create-assignment.dto.js';
-import { AssignmentRepository } from '../repositories/assignment.repository.js';
-import { AssignmentService } from '../services/assignment.service.js';
-
-const repository = new AssignmentRepository();
-const service = new AssignmentService(repository);
-
-export const assignmentsRouter = Router();
-
-assignmentsRouter.get('/', (_req, res) => {
-  res.json(service.list());
-});
-
-assignmentsRouter.post('/', validateRequest(createAssignmentSchema), (req, res) => {
-  res.status(201).json(service.create(req.body));
-});
+import { Router } from 'express'; import { asyncHandler } from '../../../common/http/async-handler.js'; import { getRequestContext, requireRoles } from '../../../common/auth/request-context.js'; import { validateRequest } from '../../../common/validation/validate-request.js'; import { createAssignmentSchema, listAssignmentsSchema, updateAssignmentSchema } from '../dto/create-assignment.dto.js'; import { AssignmentRepository } from '../repositories/assignment.repository.js'; import { AssignmentService } from '../services/assignment.service.js';
+const service=new AssignmentService(new AssignmentRepository()); export const assignmentsRouter=Router();
+assignmentsRouter.get('/', asyncHandler(async (req,res)=>res.json(service.list(getRequestContext(req),listAssignmentsSchema.parse(req.query)))));
+assignmentsRouter.get('/:id', asyncHandler(async (req,res)=>res.json(service.getById(getRequestContext(req),req.params.id))));
+assignmentsRouter.post('/', requireRoles(['district_admin','school_admin','teacher']), validateRequest(createAssignmentSchema), asyncHandler(async (req,res)=>res.status(201).json(service.create(getRequestContext(req),req.body))));
+assignmentsRouter.patch('/:id', requireRoles(['district_admin','school_admin','teacher']), validateRequest(updateAssignmentSchema), asyncHandler(async (req,res)=>res.json(service.update(getRequestContext(req),req.params.id,req.body))));
+assignmentsRouter.delete('/:id', requireRoles(['district_admin','school_admin','teacher']), asyncHandler(async (req,res)=>{service.remove(getRequestContext(req),req.params.id);res.status(204).send();}));

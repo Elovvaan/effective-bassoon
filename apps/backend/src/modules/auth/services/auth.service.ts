@@ -1,20 +1,2 @@
-import type { LoginDto } from '../dto/login.dto.js';
-import { BadRequestError } from '../../../common/errors/app-error.js';
-import { AuthRepository } from '../repositories/auth.repository.js';
-
-export class AuthService {
-  constructor(private readonly repository: AuthRepository) {}
-
-  login(dto: LoginDto) {
-    const isValid = this.repository.validateCredentials(dto.email, dto.password);
-
-    if (!isValid) {
-      throw new BadRequestError('Invalid credentials');
-    }
-
-    return {
-      accessToken: crypto.randomUUID(),
-      tokenType: 'Bearer',
-    };
-  }
-}
+import { BadRequestError } from '../../../common/errors/app-error.js'; import type { LoginDto } from '../dto/login.dto.js'; import { AuthRepository } from '../repositories/auth.repository.js';
+export class AuthService { constructor(private readonly repo:AuthRepository){} login(dto:LoginDto){const user=this.repo.findUserByEmail(dto.email); if(!user) throw new BadRequestError('Invalid credentials'); return { accessToken: crypto.randomUUID(), tokenType:'Bearer', user:{ id:user.id, name:`${user.firstName} ${user.lastName}`, role:user.role, schoolId:user.schoolId, districtId:user.districtId } }; } }

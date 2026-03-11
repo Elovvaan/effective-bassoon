@@ -1,15 +1,2 @@
-export interface AuditEvent {
-  id: string;
-  action: string;
-  timestamp: string;
-}
-
-export class AuditRepository {
-  private readonly events: AuditEvent[] = [
-    { id: '1', action: 'assignment.created', timestamp: new Date().toISOString() },
-  ];
-
-  list(limit: number): AuditEvent[] {
-    return this.events.slice(0, limit);
-  }
-}
+import type { ApiAuditLog } from '@packages/types'; import { store } from '../../_store.js';
+export class AuditRepository { create(v:ApiAuditLog){store.audits.set(v.id,v);return v;} findAll(){return Array.from(store.audits.values());} }

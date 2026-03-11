@@ -1,19 +1,7 @@
-import { Router } from 'express';
-
-import { validateRequest } from '../../../common/validation/validate-request.js';
-import { createRubricSchema } from '../dto/create-rubric.dto.js';
-import { RubricRepository } from '../repositories/rubric.repository.js';
-import { RubricService } from '../services/rubric.service.js';
-
-const repository = new RubricRepository();
-const service = new RubricService(repository);
-
-export const rubricsRouter = Router();
-
-rubricsRouter.get('/', (_req, res) => {
-  res.json(service.list());
-});
-
-rubricsRouter.post('/', validateRequest(createRubricSchema), (req, res) => {
-  res.status(201).json(service.create(req.body));
-});
+import { Router } from 'express'; import { asyncHandler } from '../../../common/http/async-handler.js'; import { getRequestContext, requireRoles } from '../../../common/auth/request-context.js'; import { validateRequest } from '../../../common/validation/validate-request.js'; import { createRubricSchema, listRubricsSchema, updateRubricSchema } from '../dto/create-rubric.dto.js'; import { RubricRepository } from '../repositories/rubric.repository.js'; import { RubricService } from '../services/rubric.service.js';
+const service=new RubricService(new RubricRepository()); export const rubricsRouter=Router();
+rubricsRouter.get('/', asyncHandler(async (req,res)=>res.json(service.list(getRequestContext(req),listRubricsSchema.parse(req.query)))));
+rubricsRouter.get('/:id', asyncHandler(async (req,res)=>res.json(service.getById(getRequestContext(req),req.params.id))));
+rubricsRouter.post('/', requireRoles(['district_admin','school_admin','teacher']), validateRequest(createRubricSchema), asyncHandler(async (req,res)=>res.status(201).json(service.create(getRequestContext(req),req.body))));
+rubricsRouter.patch('/:id', requireRoles(['district_admin','school_admin','teacher']), validateRequest(updateRubricSchema), asyncHandler(async (req,res)=>res.json(service.update(getRequestContext(req),req.params.id,req.body))));
+rubricsRouter.delete('/:id', requireRoles(['district_admin','school_admin']), asyncHandler(async (req,res)=>{service.remove(getRequestContext(req),req.params.id);res.status(204).send();}));

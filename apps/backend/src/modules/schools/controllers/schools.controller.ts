@@ -1,19 +1,7 @@
-import { Router } from 'express';
-
-import { validateRequest } from '../../../common/validation/validate-request.js';
-import { createSchoolSchema } from '../dto/create-school.dto.js';
-import { SchoolRepository } from '../repositories/school.repository.js';
-import { SchoolService } from '../services/school.service.js';
-
-const repository = new SchoolRepository();
-const service = new SchoolService(repository);
-
-export const schoolsRouter = Router();
-
-schoolsRouter.get('/', (_req, res) => {
-  res.json(service.list());
-});
-
-schoolsRouter.post('/', validateRequest(createSchoolSchema), (req, res) => {
-  res.status(201).json(service.create(req.body));
-});
+import { Router } from 'express'; import { asyncHandler } from '../../../common/http/async-handler.js'; import { getRequestContext, requireRoles } from '../../../common/auth/request-context.js'; import { validateRequest } from '../../../common/validation/validate-request.js'; import { createSchoolSchema, listSchoolsSchema, updateSchoolSchema } from '../dto/create-school.dto.js'; import { SchoolRepository } from '../repositories/school.repository.js'; import { SchoolService } from '../services/school.service.js';
+const service = new SchoolService(new SchoolRepository()); export const schoolsRouter = Router();
+schoolsRouter.get('/', asyncHandler(async (req,res)=>{res.json(service.list(getRequestContext(req),listSchoolsSchema.parse(req.query)));}));
+schoolsRouter.get('/:id', asyncHandler(async (req,res)=>res.json(service.getById(getRequestContext(req),req.params.id))));
+schoolsRouter.post('/', requireRoles(['district_admin']), validateRequest(createSchoolSchema), asyncHandler(async (req,res)=>res.status(201).json(service.create(getRequestContext(req),req.body))));
+schoolsRouter.patch('/:id', requireRoles(['district_admin']), validateRequest(updateSchoolSchema), asyncHandler(async (req,res)=>res.json(service.update(getRequestContext(req),req.params.id,req.body))));
+schoolsRouter.delete('/:id', requireRoles(['district_admin']), asyncHandler(async (req,res)=>{service.remove(getRequestContext(req),req.params.id);res.status(204).send();}));

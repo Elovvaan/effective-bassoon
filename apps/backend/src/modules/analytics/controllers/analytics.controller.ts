@@ -1,15 +1,3 @@
-import { Router } from 'express';
-
-import { queryAnalyticsSchema } from '../dto/query-analytics.dto.js';
-import { AnalyticsRepository } from '../repositories/analytics.repository.js';
-import { AnalyticsService } from '../services/analytics.service.js';
-
-const repository = new AnalyticsRepository();
-const service = new AnalyticsService(repository);
-
-export const analyticsRouter = Router();
-
-analyticsRouter.get('/overview', (req, res) => {
-  const dto = queryAnalyticsSchema.parse(req.query);
-  res.json(service.overview(dto));
-});
+import { Router } from 'express'; import { asyncHandler } from '../../../common/http/async-handler.js'; import { getRequestContext, requireRoles } from '../../../common/auth/request-context.js'; import { queryAnalyticsSchema } from '../dto/query-analytics.dto.js'; import { AnalyticsRepository } from '../repositories/analytics.repository.js'; import { AnalyticsService } from '../services/analytics.service.js';
+const service=new AnalyticsService(new AnalyticsRepository()); export const analyticsRouter=Router();
+analyticsRouter.get('/summary', requireRoles(['district_admin','school_admin','teacher']), asyncHandler(async (req,res)=>res.json(service.summary(getRequestContext(req),queryAnalyticsSchema.parse(req.query)))));

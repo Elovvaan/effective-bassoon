@@ -1,19 +1,7 @@
-import { Router } from 'express';
-
-import { validateRequest } from '../../../common/validation/validate-request.js';
-import { createClassroomSchema } from '../dto/create-classroom.dto.js';
-import { ClassroomRepository } from '../repositories/classroom.repository.js';
-import { ClassroomService } from '../services/classroom.service.js';
-
-const repository = new ClassroomRepository();
-const service = new ClassroomService(repository);
-
-export const classesRouter = Router();
-
-classesRouter.get('/', (_req, res) => {
-  res.json(service.list());
-});
-
-classesRouter.post('/', validateRequest(createClassroomSchema), (req, res) => {
-  res.status(201).json(service.create(req.body));
-});
+import { Router } from 'express'; import { asyncHandler } from '../../../common/http/async-handler.js'; import { getRequestContext, requireRoles } from '../../../common/auth/request-context.js'; import { validateRequest } from '../../../common/validation/validate-request.js'; import { createClassroomSchema, listClassroomsSchema, updateClassroomSchema } from '../dto/create-classroom.dto.js'; import { ClassroomRepository } from '../repositories/classroom.repository.js'; import { ClassroomService } from '../services/classroom.service.js';
+const service=new ClassroomService(new ClassroomRepository()); export const classesRouter=Router();
+classesRouter.get('/', asyncHandler(async (req,res)=>res.json(service.list(getRequestContext(req),listClassroomsSchema.parse(req.query)))));
+classesRouter.get('/:id', asyncHandler(async (req,res)=>res.json(service.getById(getRequestContext(req),req.params.id))));
+classesRouter.post('/', requireRoles(['district_admin','school_admin','teacher']), validateRequest(createClassroomSchema), asyncHandler(async (req,res)=>res.status(201).json(service.create(getRequestContext(req),req.body))));
+classesRouter.patch('/:id', requireRoles(['district_admin','school_admin','teacher']), validateRequest(updateClassroomSchema), asyncHandler(async (req,res)=>res.json(service.update(getRequestContext(req),req.params.id,req.body))));
+classesRouter.delete('/:id', requireRoles(['district_admin','school_admin']), asyncHandler(async (req,res)=>{service.remove(getRequestContext(req),req.params.id);res.status(204).send();}));

@@ -1,10 +1,2 @@
-import type { QueryAnalyticsDto } from '../dto/query-analytics.dto.js';
-import { AnalyticsRepository } from '../repositories/analytics.repository.js';
-
-export class AnalyticsService {
-  constructor(private readonly repository: AnalyticsRepository) {}
-
-  overview(dto: QueryAnalyticsDto) {
-    return this.repository.getOverview(dto.range);
-  }
-}
+import type { RequestContext } from '../../../common/auth/request-context.js'; import { AnalyticsRepository } from '../repositories/analytics.repository.js';
+export class AnalyticsService { constructor(private readonly repo:AnalyticsRepository){} summary(ctx:RequestContext,_q:{schoolId?:string;classroomId?:string}){const users=this.repo.listUsers().filter(u=>u.districtId===ctx.districtId); const submissions=this.repo.listSubmissions().filter(s=>s.districtId===ctx.districtId); const graded=submissions.filter(s=>s.status==='GRADED').length; return { scope: ctx.schoolId ? 'school' : 'district', activeUsers: users.filter(u=>u.isActive).length, completionRate: submissions.length===0?0:Math.round((graded/submissions.length)*100), averageScore: 0 }; } }
