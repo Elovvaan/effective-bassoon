@@ -1,6 +1,8 @@
-import { useCallback, useEffect, useState } from 'react'
-import { apiClient, type LoginPayload } from './client'
+import { useCallback, useState } from 'react'
+
 import type { Session } from '../types'
+import { useApi } from '../hooks/useApi'
+import { apiClient, type LoginPayload } from './client'
 
 export function useLogin() {
   const [isLoading, setIsLoading] = useState(false)
@@ -10,8 +12,7 @@ export function useLogin() {
     setIsLoading(true)
     setError(null)
     try {
-      const session = await apiClient.login(payload)
-      return session
+      return await apiClient.login(payload)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown login error')
       throw err
@@ -24,41 +25,13 @@ export function useLogin() {
 }
 
 export function useAnalytics(session: Session | null) {
-  const [data, setData] = useState<{ activeUsers: number; completionRate: number } | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    let ignore = false
-    async function load() {
+  return useApi(
+    async () => {
       if (!session) {
-        setData(null)
-        return
+        throw new Error('Session is required')
       }
-      setIsLoading(true)
-      setError(null)
-      try {
-        const result = await apiClient.getAnalytics(session.token)
-        if (!ignore) {
-          setData(result)
-        }
-      } catch (err) {
-        if (!ignore) {
-          setError(err instanceof Error ? err.message : 'Unknown analytics error')
-        }
-      } finally {
-        if (!ignore) {
-          setIsLoading(false)
-        }
-      }
-    }
-
-    void load()
-
-    return () => {
-      ignore = true
-    }
-  }, [session])
-
-  return { data, isLoading, error }
+      return apiClient.getAnalytics(session)
+    },
+    [session],
+  )
 }

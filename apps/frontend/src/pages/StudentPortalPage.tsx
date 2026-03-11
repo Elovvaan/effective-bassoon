@@ -1,38 +1,90 @@
-import type { AssignmentSummary } from '@packages/types'
+import { useMemo, useState } from 'react'
+import type { ApiAssignment, ApiSubmission, CreateSubmissionInput } from '@packages/types'
+import { Card, DataTable, EmptyState } from '@packages/ui'
 
-const activeAssignments: AssignmentSummary[] = [
-  { id: 'as-1', title: 'Poetry Analysis', dueDate: '2026-03-18', status: 'assigned' },
-  { id: 'as-2', title: 'Research Reflection', dueDate: '2026-03-21', status: 'submitted', score: 87, feedback: 'Great evidence and structure.' },
-]
-
-const announcements = [
-  'Library writing lab is open Tuesday and Thursday after school.',
-  'Revision checkpoint due by Friday at 5:00 PM.',
-]
+import { apiClient } from '../api/client'
+import { useApi } from '../hooks/useApi'
+import { useAuth } from '../hooks/useAuth'
+import { useRoleGuard } from '../hooks/useRoleGuard'
 
 export function StudentPortalPage() {
+  const { session } = useAuth()
+  const { canAccess } = useRoleGuard(['student'])
+
+  const assignmentsApi = useApi(async () => (session ? apiClient.listAssignments(session) : { items: [] }), [session])
+  const submissionsApi = useApi(async () => (session ? apiClient.listSubmissions(session) : { items: [] }), [session])
+
+  const [submissionForm, setSubmissionForm] = useState<CreateSubmissionInput>({
+    schoolId: session?.user.schoolId ?? '',
+    classroomId: '',
+    assignmentId: '',
+    studentId: session?.user.id ?? '',
+    status: 'SUBMITTED',
+  })
+
+  const mySubmissions = useMemo(() => (submissionsApi.data?.items ?? []).filter((item) => item.studentId === session?.user.id), [session?.user.id, submissionsApi.data?.items])
+  const activeAssignments = useMemo(() => {
+    const submittedIds = new Set(mySubmissions.map((item) => item.assignmentId))
+    return (assignmentsApi.data?.items ?? []).filter((assignment) => !submittedIds.has(assignment.id))
+  }, [assignmentsApi.data?.items, mySubmissions])
+
+  async function submitWork() {
+    if (!session) return
+    await apiClient.createSubmission(session, {
+      ...submissionForm,
+      submittedAt: new Date().toISOString(),
+      studentId: session.user.id,
+      schoolId: session.user.schoolId ?? submissionForm.schoolId,
+    })
+    await submissionsApi.reload()
+  }
+
+  if (!canAccess) {
+    return <EmptyState message="Student access required." />
+  }
+
   return (
     <section>
       <h1>Student Portal</h1>
-      <p>View active work, review feedback, and keep up with classroom announcements.</p>
 
-      <h2>Assignments</h2>
-      <ul>
-        {activeAssignments.map((assignment) => (
-          <li key={assignment.id}>
-            {assignment.title} — {assignment.status} (due {assignment.dueDate})
-            {assignment.score ? ` | score ${assignment.score}` : ''}
-            {assignment.feedback ? ` | feedback: ${assignment.feedback}` : ''}
-          </li>
-        ))}
-      </ul>
+      <Card title="Active Assignments">
+        <DataTable<ApiAssignment>
+          columns={[
+            { key: 'title', label: 'Assignment' },
+            { key: 'description', label: 'Description' },
+            { key: 'dueAt', label: 'Due Date' },
+          ]}
+          rows={activeAssignments}
+          emptyLabel="You are all caught up."
+        />
+      </Card>
 
-      <h2>Announcements</h2>
-      <ul>
-        {announcements.map((message) => (
-          <li key={message}>{message}</li>
-        ))}
-      </ul>
+      <Card title="Submit Work">
+        <form onSubmit={(event) => { event.preventDefault(); void submitWork() }}>
+          <select value={submissionForm.assignmentId} onChange={(event) => setSubmissionForm((prev) => ({ ...prev, assignmentId: event.target.value }))} required>
+            <option value="">Choose assignment</option>
+            {activeAssignments.map((assignment) => <option key={assignment.id} value={assignment.id}>{assignment.title}</option>)}
+          </select>
+          <select value={submissionForm.classroomId} onChange={(event) => setSubmissionForm((prev) => ({ ...prev, classroomId: event.target.value }))} required>
+            <option value="">Choose class ID</option>
+            {(assignmentsApi.data?.items ?? []).map((assignment) => <option key={assignment.classroomId} value={assignment.classroomId}>{assignment.classroomId}</option>)}
+          </select>
+          <button type="submit">Submit Assignment</button>
+        </form>
+      </Card>
+
+      <Card title="Grades and Feedback">
+        <DataTable<ApiSubmission>
+          columns={[
+            { key: 'assignmentId', label: 'Assignment ID' },
+            { key: 'status', label: 'Status' },
+            { key: 'submittedAt', label: 'Submitted At' },
+            { key: 'gradedAt', label: 'Graded At' },
+          ]}
+          rows={mySubmissions}
+          emptyLabel="No submissions yet."
+        />
+      </Card>
     </section>
   )
 }

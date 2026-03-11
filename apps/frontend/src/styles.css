@@ -67,3 +67,23 @@ button {
 .error {
   color: #c1121f;
 }
+
+.card {
+  background: #fff;
+  border: 1px solid #e5e8f0;
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  border-bottom: 1px solid #e5e8f0;
+  text-align: left;
+  padding: 0.5rem;
+}
