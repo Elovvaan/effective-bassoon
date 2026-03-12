@@ -21,9 +21,14 @@ const navByRole: Record<UserRole, NavItem[]> = {
 
 export function RoleNavigation({ role }: { role: UserRole }) {
   return (
-    <nav className="nav-list">
+    <nav className="nav-list" data-testid="role-navigation">
       {navByRole[role].map((item) => (
-        <NavLink key={item.path} to={item.path} className={({ isActive }) => (isActive ? 'active' : '')}>
+        <NavLink
+          key={item.path}
+          to={item.path}
+          data-testid={`nav-link-${item.path.replace('/', '') || 'home'}`}
+          className={({ isActive }) => (isActive ? 'active' : '')}
+        >
           {item.label}
         </NavLink>
       ))}

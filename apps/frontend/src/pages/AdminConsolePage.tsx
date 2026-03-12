@@ -68,27 +68,28 @@ export function AdminConsolePage() {
   }
 
   return (
-    <section>
-      <h1>Admin Console</h1>
+    <section data-testid="admin-console-page">
+      <h1 data-testid="admin-console-title">Admin Console</h1>
       {(usersApi.isLoading || schoolsApi.isLoading || classesApi.isLoading) ? <p>Loading records...</p> : null}
       {usersApi.error ? <p className="error">{usersApi.error}</p> : null}
 
       <Card title="User Management">
-        <form onSubmit={(event) => { event.preventDefault(); void submitUserForm() }}>
-          <input placeholder="First name" value={userForm.firstName} onChange={(event) => setUserForm((prev) => ({ ...prev, firstName: event.target.value }))} required />
-          <input placeholder="Last name" value={userForm.lastName} onChange={(event) => setUserForm((prev) => ({ ...prev, lastName: event.target.value }))} required />
-          <input type="email" placeholder="Email" value={userForm.email} onChange={(event) => setUserForm((prev) => ({ ...prev, email: event.target.value }))} required />
-          <select value={userForm.role} onChange={(event) => setUserForm((prev) => ({ ...prev, role: event.target.value as ApiUser['role'] }))}>
+        <div data-testid="user-management-section">
+        <form data-testid="user-form" onSubmit={(event) => { event.preventDefault(); void submitUserForm() }}>
+          <input data-testid="user-first-name-input" placeholder="First name" value={userForm.firstName} onChange={(event) => setUserForm((prev) => ({ ...prev, firstName: event.target.value }))} required />
+          <input data-testid="user-last-name-input" placeholder="Last name" value={userForm.lastName} onChange={(event) => setUserForm((prev) => ({ ...prev, lastName: event.target.value }))} required />
+          <input data-testid="user-email-input" type="email" placeholder="Email" value={userForm.email} onChange={(event) => setUserForm((prev) => ({ ...prev, email: event.target.value }))} required />
+          <select data-testid="user-role-select" value={userForm.role} onChange={(event) => setUserForm((prev) => ({ ...prev, role: event.target.value as ApiUser['role'] }))}>
             <option value="district_admin">District Admin</option>
             <option value="school_admin">School Admin</option>
             <option value="teacher">Teacher</option>
             <option value="student">Student</option>
           </select>
-          <select value={userForm.schoolId ?? ''} onChange={(event) => setUserForm((prev) => ({ ...prev, schoolId: event.target.value || undefined }))}>
+          <select data-testid="user-school-select" value={userForm.schoolId ?? ''} onChange={(event) => setUserForm((prev) => ({ ...prev, schoolId: event.target.value || undefined }))}>
             <option value="">No school</option>
             {schools.map((school) => <option key={school.id} value={school.id}>{school.name}</option>)}
           </select>
-          <button type="submit">{editingUserId ? 'Update User' : 'Create User'}</button>
+          <button data-testid="user-submit-button" type="submit">{editingUserId ? 'Update User' : 'Create User'}</button>
         </form>
 
         <DataTable<ApiUser>
@@ -97,20 +98,22 @@ export function AdminConsolePage() {
             { key: 'lastName', label: 'Last Name' },
             { key: 'email', label: 'Email' },
             { key: 'role', label: 'Role' },
-            { key: 'id', label: 'Actions', render: (row) => <button type="button" onClick={() => { setEditingUserId(row.id); setUserForm(row) }}>Edit</button> },
+            { key: 'id', label: 'Actions', render: (row) => <button data-testid="user-edit-button" type="button" onClick={() => { setEditingUserId(row.id); setUserForm(row) }}>Edit</button> },
           ]}
           rows={pagedUsers.pageItems}
         />
-        <p>Page {pagedUsers.page} of {pagedUsers.totalPages}</p>
+        <p data-testid="users-pagination">Page {pagedUsers.page} of {pagedUsers.totalPages}</p>
+        </div>
       </Card>
 
       {session?.user.role === 'district_admin' ? (
         <Card title="School Management">
-          <form onSubmit={(event) => { event.preventDefault(); void submitSchoolForm() }}>
-            <input placeholder="School name" value={schoolForm.name} onChange={(event) => setSchoolForm((prev) => ({ ...prev, name: event.target.value }))} required />
-            <input placeholder="Code" value={schoolForm.code} onChange={(event) => setSchoolForm((prev) => ({ ...prev, code: event.target.value }))} required />
-            <input placeholder="Timezone" value={schoolForm.timezone ?? ''} onChange={(event) => setSchoolForm((prev) => ({ ...prev, timezone: event.target.value || undefined }))} />
-            <button type="submit">{editingSchoolId ? 'Update School' : 'Create School'}</button>
+          <div data-testid="school-management-section">
+          <form data-testid="school-form" onSubmit={(event) => { event.preventDefault(); void submitSchoolForm() }}>
+            <input data-testid="school-name-input" placeholder="School name" value={schoolForm.name} onChange={(event) => setSchoolForm((prev) => ({ ...prev, name: event.target.value }))} required />
+            <input data-testid="school-code-input" placeholder="Code" value={schoolForm.code} onChange={(event) => setSchoolForm((prev) => ({ ...prev, code: event.target.value }))} required />
+            <input data-testid="school-timezone-input" placeholder="Timezone" value={schoolForm.timezone ?? ''} onChange={(event) => setSchoolForm((prev) => ({ ...prev, timezone: event.target.value || undefined }))} />
+            <button data-testid="school-submit-button" type="submit">{editingSchoolId ? 'Update School' : 'Create School'}</button>
           </form>
 
           <DataTable<ApiSchool>
@@ -118,27 +121,29 @@ export function AdminConsolePage() {
               { key: 'name', label: 'Name' },
               { key: 'code', label: 'Code' },
               { key: 'timezone', label: 'Timezone' },
-              { key: 'id', label: 'Actions', render: (row) => <button type="button" onClick={() => { setEditingSchoolId(row.id); setSchoolForm(row) }}>Edit</button> },
+              { key: 'id', label: 'Actions', render: (row) => <button data-testid="school-edit-button" type="button" onClick={() => { setEditingSchoolId(row.id); setSchoolForm(row) }}>Edit</button> },
             ]}
             rows={schools}
           />
+          </div>
         </Card>
       ) : null}
 
       <Card title="Class Management and Roster View">
-        <form onSubmit={(event) => { event.preventDefault(); void submitClassForm() }}>
-          <select value={classForm.schoolId} onChange={(event) => setClassForm((prev) => ({ ...prev, schoolId: event.target.value }))} required>
+        <div data-testid="class-management-section">
+        <form data-testid="class-form" onSubmit={(event) => { event.preventDefault(); void submitClassForm() }}>
+          <select data-testid="class-school-select" value={classForm.schoolId} onChange={(event) => setClassForm((prev) => ({ ...prev, schoolId: event.target.value }))} required>
             <option value="">Choose school</option>
             {schools.map((school) => <option key={school.id} value={school.id}>{school.name}</option>)}
           </select>
-          <select value={classForm.teacherId} onChange={(event) => setClassForm((prev) => ({ ...prev, teacherId: event.target.value }))} required>
+          <select data-testid="class-teacher-select" value={classForm.teacherId} onChange={(event) => setClassForm((prev) => ({ ...prev, teacherId: event.target.value }))} required>
             <option value="">Choose teacher</option>
             {users.filter((user) => user.role === 'teacher').map((teacher) => <option key={teacher.id} value={teacher.id}>{teacher.firstName} {teacher.lastName}</option>)}
           </select>
-          <input placeholder="Class name" value={classForm.name} onChange={(event) => setClassForm((prev) => ({ ...prev, name: event.target.value }))} required />
-          <input placeholder="Course code" value={classForm.courseCode} onChange={(event) => setClassForm((prev) => ({ ...prev, courseCode: event.target.value }))} required />
-          <input placeholder="Academic year" value={classForm.academicYear} onChange={(event) => setClassForm((prev) => ({ ...prev, academicYear: event.target.value }))} required />
-          <button type="submit">Create Class</button>
+          <input data-testid="class-name-input" placeholder="Class name" value={classForm.name} onChange={(event) => setClassForm((prev) => ({ ...prev, name: event.target.value }))} required />
+          <input data-testid="class-course-code-input" placeholder="Course code" value={classForm.courseCode} onChange={(event) => setClassForm((prev) => ({ ...prev, courseCode: event.target.value }))} required />
+          <input data-testid="class-academic-year-input" placeholder="Academic year" value={classForm.academicYear} onChange={(event) => setClassForm((prev) => ({ ...prev, academicYear: event.target.value }))} required />
+          <button data-testid="class-submit-button" type="submit">Create Class</button>
         </form>
 
         <DataTable<ApiClassroom & { schoolName: string }>
@@ -150,6 +155,7 @@ export function AdminConsolePage() {
           ]}
           rows={rosterRows}
         />
+        </div>
       </Card>
     </section>
   )

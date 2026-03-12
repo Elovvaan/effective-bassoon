@@ -20,21 +20,35 @@ export function LoginPage() {
   }
 
   return (
-    <div className="login-page">
-      <h1>Education Platform Login</h1>
-      <form onSubmit={(event) => void onSubmit(event)}>
+    <div className="login-page" data-testid="login-page">
+      <h1 data-testid="login-title">Education Platform Login</h1>
+      <form data-testid="login-form" onSubmit={(event) => void onSubmit(event)}>
         <label htmlFor="email">Email</label>
-        <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        <input
+          data-testid="login-email-input"
+          id="email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
 
         <label htmlFor="password">Password</label>
-        <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+        <input
+          data-testid="login-password-input"
+          id="password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
 
-        <button type="submit" disabled={isLoading}>
+        <button data-testid="login-submit-button" type="submit" disabled={isLoading}>
           {isLoading ? 'Signing in...' : 'Sign in'}
         </button>
       </form>
-      {error ? <p className="error">{error}</p> : null}
-      <button type="button" onClick={() => navigate('/')}>Reset</button>
+      {error ? <p className="error" data-testid="login-error">{error}</p> : null}
+      <button data-testid="login-reset-button" type="button" onClick={() => navigate('/')}>Reset</button>
     </div>
   )
 }

@@ -27,48 +27,54 @@ export function TeacherDashboardPage() {
   }
 
   return (
-    <section>
-      <h1>Teacher Dashboard</h1>
+    <section data-testid="teacher-dashboard-page">
+      <h1 data-testid="teacher-dashboard-title">Teacher Dashboard</h1>
       {classesApi.error || assignmentsApi.error || submissionsApi.error ? <p className="error">Unable to load teacher data.</p> : null}
 
       <Card title="My Classes">
-        <DataTable<ApiClassroom>
-          columns={[
-            { key: 'name', label: 'Class Name' },
-            { key: 'courseCode', label: 'Course' },
-            { key: 'academicYear', label: 'Year' },
-            { key: 'period', label: 'Period' },
-          ]}
-          rows={myClasses}
-          emptyLabel="No classes assigned yet."
-        />
+        <div data-testid="teacher-classes-section">
+          <DataTable<ApiClassroom>
+            columns={[
+              { key: 'name', label: 'Class Name' },
+              { key: 'courseCode', label: 'Course' },
+              { key: 'academicYear', label: 'Year' },
+              { key: 'period', label: 'Period' },
+            ]}
+            rows={myClasses}
+            emptyLabel="No classes assigned yet."
+          />
+        </div>
       </Card>
 
       <Card title="Assignments">
-        <DataTable<ApiAssignment>
-          columns={[
-            { key: 'title', label: 'Assignment' },
-            { key: 'classroomId', label: 'Class ID' },
-            { key: 'dueAt', label: 'Due Date' },
-            { key: 'maxPoints', label: 'Points' },
-          ]}
-          rows={assignmentRows}
-          emptyLabel="No assignments posted yet."
-        />
+        <div data-testid="teacher-assignments-section">
+          <DataTable<ApiAssignment>
+            columns={[
+              { key: 'title', label: 'Assignment' },
+              { key: 'classroomId', label: 'Class ID' },
+              { key: 'dueAt', label: 'Due Date' },
+              { key: 'maxPoints', label: 'Points' },
+            ]}
+            rows={assignmentRows}
+            emptyLabel="No assignments posted yet."
+          />
+        </div>
       </Card>
 
       <Card title="Submission Status">
-        <DataTable<ApiSubmission>
-          columns={[
-            { key: 'assignmentId', label: 'Assignment ID' },
-            { key: 'studentId', label: 'Student ID' },
-            { key: 'status', label: 'Status' },
-            { key: 'submittedAt', label: 'Submitted' },
-            { key: 'gradedAt', label: 'Graded' },
-          ]}
-          rows={submissionRows}
-          emptyLabel="No submission activity yet."
-        />
+        <div data-testid="teacher-submissions-section">
+          <DataTable<ApiSubmission>
+            columns={[
+              { key: 'assignmentId', label: 'Assignment ID' },
+              { key: 'studentId', label: 'Student ID' },
+              { key: 'status', label: 'Status' },
+              { key: 'submittedAt', label: 'Submitted' },
+              { key: 'gradedAt', label: 'Graded' },
+            ]}
+            rows={submissionRows}
+            emptyLabel="No submission activity yet."
+          />
+        </div>
       </Card>
     </section>
   )
