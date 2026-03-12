@@ -10,6 +10,15 @@
     "test": "node --test",
     "lint": "tsc -p tsconfig.json --noEmit",
     "format": "echo 'No formatter configured for @apps/backend'",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "seed": "ts-node src/seed.ts"
+  },
+  "dependencies": {
+    "@packages/types": "0.1.0",
+    "@prisma/client": "^6.6.0"
+  },
+  "devDependencies": {
+    "ts-node": "^10.9.2",
+    "prisma": "^6.6.0"
   }
 }
