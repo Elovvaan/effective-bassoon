@@ -75,10 +75,26 @@ cp apps/frontend/.env.example apps/frontend/.env
 
 ```bash
 npm --workspace @apps/backend run prisma:migrate
-npm --workspace @apps/backend run prisma:seed
+npm --workspace @apps/backend run seed
 ```
 
-> If your workspace scripts do not define these names yet, run Prisma commands directly from `apps/backend`.
+If Prisma migrations are not wired to scripts in your local environment yet, run them directly from `apps/backend` first and then run:
+
+```bash
+npm --workspace @apps/backend run seed
+```
+
+### Seeded demo accounts
+
+Use the following demo logins after seeding local data:
+
+- District admin: `district.admin@metro.demo`
+- School admin (NHS): `principal.nhs@metro.demo`
+- School admin (WMS): `principal.wms@metro.demo`
+- Teacher: `teacher1@metro.demo`
+- Student: `student1@metro.demo`
+
+Password (all demo users): `Password123!`
 
 ### 4) Start backend and frontend
 
