@@ -10,12 +10,12 @@ export function RoleLayoutShell({ title, children }: { title: string; children: 
   }
 
   return (
-    <div className="app-shell">
+    <div className="app-shell" data-testid="role-layout-shell">
       <aside>
-        <h2>{title}</h2>
-        <p>{session.user.name}</p>
+        <h2 data-testid="role-layout-title">{title}</h2>
+        <p data-testid="role-layout-user-name">{session.user.name}</p>
         <RoleNavigation role={session.user.role} />
-        <button type="button" onClick={logout}>Sign out</button>
+        <button data-testid="signout-button" type="button" onClick={logout}>Sign out</button>
       </aside>
       <main>{children}</main>
     </div>

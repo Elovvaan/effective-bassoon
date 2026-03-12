@@ -11,9 +11,12 @@
     "test": "npm run -ws test",
     "lint": "npm run -ws lint",
     "format": "npm run -ws format",
-    "clean": "npm run -ws clean"
+    "clean": "npm run -ws clean",
+    "e2e": "playwright test -c apps/e2e/playwright.config.ts",
+    "e2e:ui": "playwright test --ui -c apps/e2e/playwright.config.ts"
   },
   "devDependencies": {
-    "typescript": "^5.6.3"
+    "typescript": "^5.6.3",
+    "@playwright/test": "^1.52.0"
   }
 }

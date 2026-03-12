@@ -112,6 +112,24 @@ npm --workspace @apps/frontend run dev
 | Teacher | `/teacher`, `/analytics` | Class management, assignment and submission review |
 | Student | `/student` | Assignment completion, feedback and progress |
 
+## End-to-End (E2E) Testing
+
+Playwright E2E tests live in `apps/e2e` and validate full frontend + backend user flows using seeded demo accounts.
+
+### Run E2E tests
+
+```bash
+npm run e2e
+```
+
+### Run E2E tests in Playwright UI mode
+
+```bash
+npm run e2e:ui
+```
+
+Before running E2E tests, start backend and frontend locally and seed the demo data as described above.
+
 ## Testing and Quality Checks
 
 ```bash

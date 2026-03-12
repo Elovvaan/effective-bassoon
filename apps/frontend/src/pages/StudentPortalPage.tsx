@@ -44,46 +44,52 @@ export function StudentPortalPage() {
   }
 
   return (
-    <section>
-      <h1>Student Portal</h1>
+    <section data-testid="student-portal-page">
+      <h1 data-testid="student-portal-title">Student Portal</h1>
 
       <Card title="Active Assignments">
-        <DataTable<ApiAssignment>
-          columns={[
-            { key: 'title', label: 'Assignment' },
-            { key: 'description', label: 'Description' },
-            { key: 'dueAt', label: 'Due Date' },
-          ]}
-          rows={activeAssignments}
-          emptyLabel="You are all caught up."
-        />
+        <div data-testid="student-active-assignments-section">
+          <DataTable<ApiAssignment>
+            columns={[
+              { key: 'title', label: 'Assignment' },
+              { key: 'description', label: 'Description' },
+              { key: 'dueAt', label: 'Due Date' },
+            ]}
+            rows={activeAssignments}
+            emptyLabel="You are all caught up."
+          />
+        </div>
       </Card>
 
       <Card title="Submit Work">
-        <form onSubmit={(event) => { event.preventDefault(); void submitWork() }}>
-          <select value={submissionForm.assignmentId} onChange={(event) => setSubmissionForm((prev) => ({ ...prev, assignmentId: event.target.value }))} required>
-            <option value="">Choose assignment</option>
-            {activeAssignments.map((assignment) => <option key={assignment.id} value={assignment.id}>{assignment.title}</option>)}
-          </select>
-          <select value={submissionForm.classroomId} onChange={(event) => setSubmissionForm((prev) => ({ ...prev, classroomId: event.target.value }))} required>
-            <option value="">Choose class ID</option>
-            {(assignmentsApi.data?.items ?? []).map((assignment) => <option key={assignment.classroomId} value={assignment.classroomId}>{assignment.classroomId}</option>)}
-          </select>
-          <button type="submit">Submit Assignment</button>
-        </form>
+        <div data-testid="student-submit-work-section">
+          <form data-testid="student-submission-form" onSubmit={(event) => { event.preventDefault(); void submitWork() }}>
+            <select data-testid="student-assignment-select" value={submissionForm.assignmentId} onChange={(event) => setSubmissionForm((prev) => ({ ...prev, assignmentId: event.target.value }))} required>
+              <option value="">Choose assignment</option>
+              {activeAssignments.map((assignment) => <option key={assignment.id} value={assignment.id}>{assignment.title}</option>)}
+            </select>
+            <select data-testid="student-classroom-select" value={submissionForm.classroomId} onChange={(event) => setSubmissionForm((prev) => ({ ...prev, classroomId: event.target.value }))} required>
+              <option value="">Choose class ID</option>
+              {(assignmentsApi.data?.items ?? []).map((assignment) => <option key={assignment.classroomId} value={assignment.classroomId}>{assignment.classroomId}</option>)}
+            </select>
+            <button data-testid="student-submit-button" type="submit">Submit Assignment</button>
+          </form>
+        </div>
       </Card>
 
       <Card title="Grades and Feedback">
-        <DataTable<ApiSubmission>
-          columns={[
-            { key: 'assignmentId', label: 'Assignment ID' },
-            { key: 'status', label: 'Status' },
-            { key: 'submittedAt', label: 'Submitted At' },
-            { key: 'gradedAt', label: 'Graded At' },
-          ]}
-          rows={mySubmissions}
-          emptyLabel="No submissions yet."
-        />
+        <div data-testid="student-submissions-section">
+          <DataTable<ApiSubmission>
+            columns={[
+              { key: 'assignmentId', label: 'Assignment ID' },
+              { key: 'status', label: 'Status' },
+              { key: 'submittedAt', label: 'Submitted At' },
+              { key: 'gradedAt', label: 'Graded At' },
+            ]}
+            rows={mySubmissions}
+            emptyLabel="No submissions yet."
+          />
+        </div>
       </Card>
     </section>
   )

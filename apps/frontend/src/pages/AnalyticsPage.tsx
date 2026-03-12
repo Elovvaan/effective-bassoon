@@ -18,20 +18,20 @@ export function AnalyticsPage() {
     return <EmptyState message="Analytics access required." />
   }
 
-  const scopeRows: AnalyticsSummary[] = [
-    summaryApi.data ?? { scope: 'district', activeUsers: 0, completionRate: 0, averageScore: 0 },
-    { scope: 'school', activeUsers: schoolsApi.data?.items.length ?? 0, completionRate: summaryApi.data?.completionRate ?? 0, averageScore: summaryApi.data?.averageScore ?? 0 },
-    { scope: 'class', activeUsers: classesApi.data?.items.length ?? 0, completionRate: summaryApi.data?.completionRate ?? 0, averageScore: summaryApi.data?.averageScore ?? 0 },
+  const scopeRows: Array<AnalyticsSummary & { id: string }> = [
+    { id: 'district', ...(summaryApi.data ?? { scope: 'district', activeUsers: 0, completionRate: 0, averageScore: 0 }) },
+    { id: 'school', scope: 'school', activeUsers: schoolsApi.data?.items.length ?? 0, completionRate: summaryApi.data?.completionRate ?? 0, averageScore: summaryApi.data?.averageScore ?? 0 },
+    { id: 'class', scope: 'class', activeUsers: classesApi.data?.items.length ?? 0, completionRate: summaryApi.data?.completionRate ?? 0, averageScore: summaryApi.data?.averageScore ?? 0 },
   ]
 
   return (
-    <section>
-      <h1>Analytics</h1>
+    <section data-testid="analytics-page">
+      <h1 data-testid="analytics-title">Analytics</h1>
       {summaryApi.isLoading ? <p>Loading analytics...</p> : null}
       {summaryApi.error ? <p className="error">{summaryApi.error}</p> : null}
 
       <Card title="District-Level Metrics">
-        <ul>
+        <ul data-testid="district-metrics-list">
           <li>Active users: {summaryApi.data?.activeUsers ?? 0}</li>
           <li>Completion rate: {summaryApi.data?.completionRate ?? 0}%</li>
           <li>Average score: {summaryApi.data?.averageScore ?? 0}</li>
@@ -39,15 +39,17 @@ export function AnalyticsPage() {
       </Card>
 
       <Card title="Scope Metrics Table">
-        <DataTable<AnalyticsSummary>
-          columns={[
-            { key: 'scope', label: 'Scope' },
-            { key: 'activeUsers', label: 'Active Users' },
-            { key: 'completionRate', label: 'Completion %' },
-            { key: 'averageScore', label: 'Average Score' },
-          ]}
-          rows={scopeRows}
-        />
+        <div data-testid="scope-metrics-table">
+          <DataTable<AnalyticsSummary & { id: string }>
+            columns={[
+              { key: 'scope', label: 'Scope' },
+              { key: 'activeUsers', label: 'Active Users' },
+              { key: 'completionRate', label: 'Completion %' },
+              { key: 'averageScore', label: 'Average Score' },
+            ]}
+            rows={scopeRows}
+          />
+        </div>
       </Card>
     </section>
   )
