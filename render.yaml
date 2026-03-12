@@ -1,0 +1,50 @@
+databases:
+  - name: effective-bassoon-db
+    databaseName: effective_bassoon
+    user: effective_bassoon
+    plan: free
+
+services:
+  - type: web
+    name: effective-bassoon-backend
+    runtime: docker
+    dockerContext: .
+    dockerfilePath: ./apps/backend/Dockerfile
+    dockerCommand: sh -c "npm run prisma:migrate:deploy && npm run start"
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: API_PREFIX
+        value: /api
+      - key: DATABASE_URL
+        fromDatabase:
+          name: effective-bassoon-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: FRONTEND_URL
+        fromService:
+          type: web
+          name: effective-bassoon-frontend
+          property: url
+      - key: BACKEND_URL
+        fromService:
+          type: web
+          name: effective-bassoon-backend
+          property: url
+
+  - type: web
+    name: effective-bassoon-frontend
+    runtime: static
+    rootDir: apps/frontend
+    buildCommand: npm run build
+    staticPublishPath: dist
+    pullRequestPreviewsEnabled: true
+    autoDeploy: true
+    envVars:
+      - key: VITE_API_BASE_URL
+        value: https://effective-bassoon-backend.onrender.com/api

@@ -148,3 +148,51 @@ npm run build
   - `docs/modules/assessments.md`
   - `docs/modules/analytics.md`
   - `docs/modules/audit-logging.md`
+
+## Deployment (Render)
+
+This repository includes a `render.yaml` blueprint that provisions:
+
+- `effective-bassoon-db` managed Postgres database.
+- `effective-bassoon-backend` Docker web service (`apps/backend/Dockerfile`).
+- `effective-bassoon-frontend` static site (`apps/frontend`, published from `dist`).
+
+### Backend (Docker Web Service)
+
+- Dockerfile: `apps/backend/Dockerfile`
+- Health check: `GET /health`
+- Runtime start command: `npm run prisma:migrate:deploy && npm run start`
+- Prisma datasource is configured via `DATABASE_URL`.
+
+Environment variables are validated in `apps/backend/src/config/env.ts` and must include:
+
+- `API_PREFIX`
+- `PORT`
+- `DATABASE_URL`
+- `JWT_SECRET`
+- `FRONTEND_URL`
+- `BACKEND_URL`
+
+Use `apps/backend/.env.production.example` as the production template.
+
+### Frontend (Static Site)
+
+Render static site configuration uses:
+
+- Root directory: `apps/frontend`
+- Build command: `npm run build`
+- Publish directory: `dist`
+
+Use `apps/frontend/.env.production.example` and set at minimum:
+
+- `VITE_API_BASE_URL` (for API requests)
+- `VITE_BACKEND_URL`
+- `VITE_FRONTEND_URL`
+
+### Deployment steps
+
+1. Push to your GitHub repository.
+2. In Render, create a new **Blueprint** and select this repo.
+3. Render reads `render.yaml`, provisions database + services, and wires `DATABASE_URL`.
+4. Set/override environment values (notably `JWT_SECRET` and `VITE_API_BASE_URL`) in Render dashboard if needed.
+5. Deploy. Backend runs Prisma migrations on startup using `prisma migrate deploy`.
